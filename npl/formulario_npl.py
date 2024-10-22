@@ -20,7 +20,7 @@ def continuar():
         num_variables = int(entry_num_variables.get())
         num_restricciones = int(entry_num_restricciones.get())
 
-        if not (1 <= num_variables <= 9) or not (1 <= num_restricciones <= 9):
+        if not (1 <= num_variables <= 3) or not (1 <= num_restricciones <= 9):
             raise ValueError
 
         tipo_problema = variable_tipo.get()
@@ -44,7 +44,7 @@ def continuar():
         # Mostrar mensaje de error si los datos son inválidos
         messagebox.showerror(
             "Error",
-            "Por favor ingrese valores válidos, el máximo de variables y restricciones permitidos es de 9"
+            "Por favor ingrese valores válidos, el máximo de variables es 3 con potencia máxima de grado 3 y el máximo de restricciones permitidos es de 9"
         )
 
 
@@ -70,7 +70,7 @@ def crear_campos_variables():
         entries_variables.append(entry_var)
 
         # Etiqueta para el exponente
-        tk.Label(root, text=f"Exponente x{i + 1}:").grid(row=i + 1, column=2, padx=5, pady=5)
+        tk.Label(root, text=f"Exponente x{i + 1}: (Máximo grado 3)").grid(row=i + 1, column=2, padx=5, pady=5)
         entry_exp = tk.Entry(root, width=5)
         entry_exp.grid(row=i + 1, column=3, padx=5, pady=5)
         entries_exponentes.append(entry_exp)
@@ -212,7 +212,7 @@ def crear_formulario(parent):
     root = parent
 
     # Etiqueta y entrada para número de variables
-    tk.Label(root, text="Número de variables (máximo 9):").grid(row=0, column=0, padx=5, pady=5)
+    tk.Label(root, text="Número de variables (máximo 3):").grid(row=0, column=0, padx=5, pady=5)
     global entry_num_variables
     entry_num_variables = tk.Entry(root)
     entry_num_variables.grid(row=0, column=1, padx=5, pady=5)

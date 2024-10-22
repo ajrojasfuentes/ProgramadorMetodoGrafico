@@ -3,123 +3,220 @@ from tkinter import messagebox
 from pl.optimizacion_pl import optimizar
 from pl.graficar_pl import graficar_solucion
 
+# Variables globales para almacenar las entradas de usuario
 entries_variables = []
 entries_restricciones = []
 operadores_restricciones = []
 
-def enviar_datos():
+def continuar():
+    """
+    Función que se ejecuta al presionar el botón "Continuar".
+    Valida los datos ingresados y, si son correctos, avanza al siguiente paso.
+    """
     try:
+        # Obtener y validar el número de variables y restricciones
         num_variables = int(entry_num_variables.get())
-        tipo_problema = variable_tipo.get()
         num_restricciones = int(entry_num_restricciones.get())
 
-        variables = []
-        for i in range(num_variables):
-            variables.append(float(entries_variables[i].get()))
+        if not (1 <= num_variables <= 9) or not (1 <= num_restricciones <= 9):
+            raise ValueError
 
+        tipo_problema = variable_tipo.get()
+
+        # Guardar los datos en variables globales
+        global datos_iniciales
+        datos_iniciales = {
+            "num_variables": num_variables,
+            "num_restricciones": num_restricciones,
+            "tipo_problema": tipo_problema
+        }
+
+        # Limpiar la ventana
+        for widget in root.winfo_children():
+            widget.destroy()
+
+        # Avanzar a la siguiente etapa
+        crear_campos_variables()
+
+    except ValueError:
+        # Mostrar mensaje de error si los datos son inválidos
+        messagebox.showerror(
+            "Error",
+            "Por favor ingrese valores válidos, el máximo de variables y restricciones permitidos es de 9"
+        )
+
+def crear_campos_variables():
+    """
+    Crea los campos de entrada para los coeficientes de las variables de la función objetivo.
+    """
+    global entries_variables
+    entries_variables = []
+
+    num_variables = datos_iniciales["num_variables"]
+
+    # Etiqueta para la función objetivo
+    tk.Label(root, text="Función Objetivo").grid(row=0, column=0, columnspan=2, pady=10)
+
+    # Crear campos para coeficientes
+    for i in range(num_variables):
+        # Etiqueta de la variable (x1, x2, ...)
+        tk.Label(root, text=f"Coeficiente x{i+1}:").grid(row=i+1, column=0, padx=5, pady=5)
+        entry_var = tk.Entry(root, width=10)
+        entry_var.grid(row=i+1, column=1, padx=5, pady=5)
+        entries_variables.append(entry_var)
+
+    # Botón para agregar restricciones
+    btn_agregar_restricciones = tk.Button(root, text="Continuar", command=crear_campos_restricciones)
+    btn_agregar_restricciones.grid(row=num_variables+2, column=0, columnspan=2, pady=10)
+
+def crear_campos_restricciones():
+    """
+    Crea los campos de entrada para las restricciones.
+    """
+    try:
+        # Validar que los coeficientes sean numéricos
+        num_variables = datos_iniciales["num_variables"]
+        num_restricciones = datos_iniciales["num_restricciones"]
+
+        global coeficientes_objetivo
+        coeficientes_objetivo = []
+
+        for i in range(num_variables):
+            coef = float(entries_variables[i].get())
+            coeficientes_objetivo.append(coef)
+
+        # Limpiar la ventana
+        for widget in root.winfo_children():
+            widget.destroy()
+
+        global entries_restricciones, operadores_restricciones
+        entries_restricciones = []
+        operadores_restricciones = []
+
+        # Etiqueta para restricciones
+        tk.Label(root, text="Restricciones").grid(row=0, column=0, columnspan=4, pady=10)
+
+        # Crear campos para restricciones
+        for i in range(num_restricciones):
+            restriccion_entries = []
+            for j in range(num_variables):
+                # Etiqueta de la variable en la restricción
+                tk.Label(root, text=f"Coef x{j+1} en R{i+1}:").grid(row=i*(num_variables+2)+j+1, column=0, padx=5, pady=5)
+                entry = tk.Entry(root, width=10)
+                entry.grid(row=i*(num_variables+2)+j+1, column=1, padx=5, pady=5)
+                restriccion_entries.append(entry)
+
+            # Menú desplegable para operador
+            operador = tk.StringVar(root)
+            operador.set("<=")
+            operadores_restricciones.append(operador)
+            tk.Label(root, text="Operador:").grid(row=i*(num_variables+2)+num_variables+1, column=0, padx=5, pady=5)
+            tk.OptionMenu(root, operador, "<=", ">=").grid(row=i*(num_variables+2)+num_variables+1, column=1, padx=5, pady=5)
+
+            # Entrada para resultado de la restricción
+            tk.Label(root, text="Resultado:").grid(row=i*(num_variables+2)+num_variables+2, column=0, padx=5, pady=5)
+            resultado_restriccion = tk.Entry(root, width=10)
+            resultado_restriccion.grid(row=i*(num_variables+2)+num_variables+2, column=1, padx=5, pady=5)
+            restriccion_entries.append(resultado_restriccion)
+
+            entries_restricciones.append(restriccion_entries)
+
+        # Botón para enviar datos y ejecutar la optimización
+        btn_enviar = tk.Button(root, text="Optimizar", command=enviar_datos)
+        btn_enviar.grid(row=num_restricciones*(num_variables+2)+1, column=0, columnspan=2, pady=10)
+
+    except ValueError:
+        # Mostrar mensaje de error si los datos son inválidos
+        messagebox.showerror("Error", "Por favor, ingrese coeficientes válidos.")
+
+def enviar_datos():
+    """
+    Recopila todos los datos ingresados y ejecuta la optimización.
+    """
+    try:
+        num_variables = datos_iniciales["num_variables"]
+        num_restricciones = datos_iniciales["num_restricciones"]
+        tipo_problema = datos_iniciales["tipo_problema"]
+
+        # Las listas coeficientes_objetivo ya fueron obtenidas
+        global coeficientes_objetivo
+
+        # Recoger restricciones
         restricciones = []
         for i in range(num_restricciones):
-            restriccion = []
+            coeficientes_restriccion = []
             for j in range(num_variables):
-                restriccion.append(float(entries_restricciones[i][j].get()))
+                coeficiente = float(entries_restricciones[i][j].get())
+                coeficientes_restriccion.append(coeficiente)
             operador = operadores_restricciones[i].get()
             resultado_restriccion = float(entries_restricciones[i][-1].get())
-            restriccion.append(operador)
-            restriccion.append(resultado_restriccion)
-            restricciones.append(restriccion)
 
+            restricciones.append({
+                'coeficientes': coeficientes_restriccion,
+                'operador': operador,
+                'resultado': resultado_restriccion
+            })
+
+        # Preparar datos para la optimización
         datos_optimizacion = {
-            "variables": variables,
+            "variables": coeficientes_objetivo,
             "tipo_problema": tipo_problema,
             "restricciones": restricciones
         }
 
         # Ejecutar la optimización
         solucion_optima = optimizar(datos_optimizacion)
-        
-        # Graficar la solución
+
+        # Graficar la solución si existe
         if solucion_optima is not None:
-            A = []
-            b = []
-            for restriccion in restricciones:
-                coeficientes = restriccion[:-2]
-                operador = restriccion[-2]
-                resultado_restriccion = restriccion[-1]
+            graficar_solucion(datos_optimizacion, solucion_optima)
 
-                if operador == "<=":
-                    A.append(coeficientes)
-                    b.append(resultado_restriccion)
-                elif operador == ">=":
-                    A.append([-1 * coef for coef in coeficientes])
-                    b.append(-resultado_restriccion)
-
-            graficar_solucion(A, b, solucion_optima)
-
+        # Mostrar mensaje de éxito
+        messagebox.showinfo("Éxito", "Optimización completada exitosamente.")
         root.destroy()
 
     except ValueError:
-        messagebox.showerror("Error", "Por favor, ingrese datos válidos.")
-
-def agregar_variables():
-    global entry_resultado_ecuacion
-    try:
-        for widget in root.grid_slaves():
-            if int(widget.grid_info()["row"]) > 1:
-                widget.grid_forget()
-
-        num_variables = int(entry_num_variables.get())
-        num_restricciones = int(entry_num_restricciones.get())
-
-        for i in range(num_variables):
-            entry = tk.Entry(root, width=5)
-            entry.grid(row=2, column=i * 2, padx=2, pady=5)
-            tk.Label(root, text=f"x{i+1}").grid(row=2, column=(i * 2) + 1, padx=2, pady=5)
-            entries_variables.append(entry)
-
-        tk.Label(root, text="Restricciones").grid(row=3, column=0, columnspan=2, padx=2, pady=5)
-        for i in range(num_restricciones):
-            restriccion_entries = []
-            for j in range(num_variables):
-                entry = tk.Entry(root, width=5)
-                entry.grid(row=4 + i, column=j * 2, padx=2, pady=5)
-                tk.Label(root, text=f"x{j+1}").grid(row=4 + i, column=(j * 2) + 1, padx=2, pady=5)
-                restriccion_entries.append(entry)
-
-            operador = tk.StringVar(root)
-            operador.set("<=")
-            operadores_restricciones.append(operador)
-            tk.OptionMenu(root, operador, "<=", ">=").grid(row=4 + i, column=num_variables * 2, padx=2, pady=5)
-
-            resultado_restriccion = tk.Entry(root, width=5)
-            resultado_restriccion.grid(row=4 + i, column=(num_variables * 2) + 1, padx=2, pady=5)
-            restriccion_entries.append(resultado_restriccion)
-            entries_restricciones.append(restriccion_entries)
-
-        btn_enviar = tk.Button(root, text="Enviar", command=enviar_datos)
-        btn_enviar.grid(row=6 + num_restricciones, column=1)
-
-    except ValueError:
+        # Mostrar mensaje de error si hay valores inválidos
         messagebox.showerror("Error", "Por favor, ingrese datos válidos.")
 
 def crear_formulario(parent):
+    """
+    Función para crear el formulario inicial de la interfaz gráfica.
+    """
     global root
     root = parent
 
-    tk.Label(root, text="Número de variables:").grid(row=0, column=0)
+    # Etiqueta y entrada para número de variables
+    tk.Label(root, text="Número de variables (máximo 9):").grid(row=0, column=0, padx=5, pady=5)
     global entry_num_variables
     entry_num_variables = tk.Entry(root)
-    entry_num_variables.grid(row=0, column=1)
+    entry_num_variables.grid(row=0, column=1, padx=5, pady=5)
 
-    btn_agregar = tk.Button(root, text="Agregar Variables y Restricciones", command=agregar_variables)
-    btn_agregar.grid(row=0, column=2)
+    # Etiqueta y entrada para número de restricciones
+    tk.Label(root, text="Número de restricciones (máximo 9):").grid(row=1, column=0, padx=5, pady=5)
+    global entry_num_restricciones
+    entry_num_restricciones = tk.Entry(root)
+    entry_num_restricciones.grid(row=1, column=1, padx=5, pady=5)
 
-    tk.Label(root, text="Maximizar o minimizar (max/min):").grid(row=1, column=0)
+    # Etiqueta y menú para seleccionar tipo de problema
+    tk.Label(root, text="Tipo de problema:").grid(row=2, column=0, padx=5, pady=5)
     global variable_tipo
     variable_tipo = tk.StringVar(root)
     variable_tipo.set("max")  # Valor por defecto
-    tk.OptionMenu(root, variable_tipo, "max", "min").grid(row=1, column=1)
+    tk.OptionMenu(root, variable_tipo, "max", "min").grid(row=2, column=1, padx=5, pady=5)
 
-    global entry_num_restricciones
-    tk.Label(root, text="Número de restricciones:").grid(row=0, column=3)
-    entry_num_restricciones = tk.Entry(root)
-    entry_num_restricciones.grid(row=0, column=4)
+    # Botón "Continuar"
+    btn_continuar = tk.Button(root, text="Continuar", command=continuar)
+    btn_continuar.grid(row=3, column=0, columnspan=2, pady=10)
+
+# Código para iniciar la aplicación
+if __name__ == "__main__":
+    # Crear ventana principal
+    root = tk.Tk()
+    root.title("Programación Lineal")
+
+    # Llamar a la función para crear el formulario inicial
+    crear_formulario(root)
+
+    # Iniciar el bucle principal de la interfaz gráfica
+    root.mainloop()
