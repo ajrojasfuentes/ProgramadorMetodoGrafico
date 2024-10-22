@@ -6,7 +6,8 @@ from npl.graficar_npl import graficar_solucion
 # Variables globales para almacenar las entradas de usuario
 entries_variables = []  # Lista para entradas de coeficientes de variables
 entries_exponentes = []  # Lista para entradas de exponentes de variables
-entries_restricciones = []  # Lista para entradas de restricciones
+entries_restricciones_coeficientes = []  # Lista para entradas de coeficientes de restricciones
+entries_restricciones_exponentes = []  # Lista para entradas de exponentes de restricciones
 operadores_restricciones = []  # Lista para operadores de restricciones (<=, >=)
 
 
@@ -82,7 +83,7 @@ def crear_campos_variables():
 
 def crear_campos_restricciones():
     """
-    Crea los campos de entrada para las restricciones.
+    Crea los campos de entrada para las restricciones, incluyendo exponentes.
     """
     try:
         # Validar que los coeficientes y exponentes sean numéricos
@@ -98,7 +99,7 @@ def crear_campos_restricciones():
         for i in range(num_variables):
             coef = float(entries_variables[i].get())
             exp = int(entries_exponentes[i].get())
-            if exp <= 0:
+            if exp <= 0 or exp > 3:
                 raise ValueError
             coeficientes_objetivo.append(coef)
             exponentes_objetivo.append(exp)
@@ -107,45 +108,55 @@ def crear_campos_restricciones():
         for widget in root.winfo_children():
             widget.destroy()
 
-        global entries_restricciones, operadores_restricciones
-        entries_restricciones = []
+        global entries_restricciones_coeficientes, entries_restricciones_exponentes, operadores_restricciones
+        entries_restricciones_coeficientes = []
+        entries_restricciones_exponentes = []
         operadores_restricciones = []
 
         # Etiqueta para restricciones
-        tk.Label(root, text="Restricciones").grid(row=0, column=0, columnspan=4, pady=10)
+        tk.Label(root, text="Restricciones").grid(row=0, column=0, columnspan=6, pady=10)
 
         # Crear campos para restricciones
         for i in range(num_restricciones):
-            restriccion_entries = []
+            restriccion_entries_coef = []
+            restriccion_entries_exp = []
             for j in range(num_variables):
                 # Etiqueta de la variable en la restricción
-                tk.Label(root, text=f"Coef x{j + 1} en R{i + 1}:").grid(row=i * (num_variables + 2) + j + 1, column=0,
+                tk.Label(root, text=f"Coef x{j + 1} en R{i + 1}:").grid(row=i * (num_variables + 3) + j + 1, column=0,
                                                                         padx=5, pady=5)
-                entry = tk.Entry(root, width=5)
-                entry.grid(row=i * (num_variables + 2) + j + 1, column=1, padx=5, pady=5)
-                restriccion_entries.append(entry)
+                entry_coef = tk.Entry(root, width=5)
+                entry_coef.grid(row=i * (num_variables + 3) + j + 1, column=1, padx=5, pady=5)
+                restriccion_entries_coef.append(entry_coef)
+
+                tk.Label(root, text=f"Exp x{j + 1} en R{i + 1}: (Máx grado 2)").grid(row=i * (num_variables + 3) + j + 1, column=2,
+                                                                        padx=5, pady=5)
+                entry_exp = tk.Entry(root, width=5)
+                entry_exp.grid(row=i * (num_variables + 3) + j + 1, column=3, padx=5, pady=5)
+                restriccion_entries_exp.append(entry_exp)
 
             # Menú desplegable para operador
             operador = tk.StringVar(root)
             operador.set("<=")
             operadores_restricciones.append(operador)
-            tk.Label(root, text="Operador:").grid(row=i * (num_variables + 2) + num_variables + 1, column=0, padx=5,
+            tk.Label(root, text="Operador:").grid(row=i * (num_variables + 3) + num_variables + 1, column=0, padx=5,
                                                   pady=5)
-            tk.OptionMenu(root, operador, "<=", ">=").grid(row=i * (num_variables + 2) + num_variables + 1, column=1,
+            tk.OptionMenu(root, operador, "<=", ">=").grid(row=i * (num_variables + 3) + num_variables + 1, column=1,
                                                            padx=5, pady=5)
 
             # Entrada para resultado de la restricción
-            tk.Label(root, text="Resultado:").grid(row=i * (num_variables + 2) + num_variables + 2, column=0, padx=5,
+            tk.Label(root, text="Resultado:").grid(row=i * (num_variables + 3) + num_variables + 2, column=0, padx=5,
                                                    pady=5)
             resultado_restriccion = tk.Entry(root, width=5)
-            resultado_restriccion.grid(row=i * (num_variables + 2) + num_variables + 2, column=1, padx=5, pady=5)
-            restriccion_entries.append(resultado_restriccion)
+            resultado_restriccion.grid(row=i * (num_variables + 3) + num_variables + 2, column=1, padx=5, pady=5)
+            # Incluimos este entry en los coeficientes para mantener el orden
+            restriccion_entries_coef.append(resultado_restriccion)
 
-            entries_restricciones.append(restriccion_entries)
+            entries_restricciones_coeficientes.append(restriccion_entries_coef)
+            entries_restricciones_exponentes.append(restriccion_entries_exp)
 
         # Botón para enviar datos y ejecutar la optimización
         btn_enviar = tk.Button(root, text="Optimizar", command=enviar_datos)
-        btn_enviar.grid(row=num_restricciones * (num_variables + 2) + 1, column=0, columnspan=2, pady=10)
+        btn_enviar.grid(row=num_restricciones * (num_variables + 3) + 1, column=0, columnspan=4, pady=10)
 
     except ValueError:
         # Mostrar mensaje de error si los datos son inválidos
@@ -168,14 +179,20 @@ def enviar_datos():
         restricciones = []
         for i in range(num_restricciones):
             coeficientes_restriccion = []
+            exponentes_restriccion = []
             for j in range(num_variables):
-                coeficiente = float(entries_restricciones[i][j].get())
+                coeficiente = float(entries_restricciones_coeficientes[i][j].get())
+                exponente = int(entries_restricciones_exponentes[i][j].get())
+                if exponente <= 0 or exponente > 2:
+                    raise ValueError
                 coeficientes_restriccion.append(coeficiente)
+                exponentes_restriccion.append(exponente)
             operador = operadores_restricciones[i].get()
-            resultado_restriccion = float(entries_restricciones[i][-1].get())
+            resultado_restriccion = float(entries_restricciones_coeficientes[i][-1].get())
 
             restricciones.append({
                 'coeficientes': coeficientes_restriccion,
+                'exponentes': exponentes_restriccion,
                 'operador': operador,
                 'resultado': resultado_restriccion
             })

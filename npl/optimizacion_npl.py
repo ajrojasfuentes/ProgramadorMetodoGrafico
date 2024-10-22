@@ -16,23 +16,24 @@ def construir_funcion_objetivo(coeficientes, exponentes):
 
     return funcion_objetivo
 
-def crear_funcion_restriccion(coeficientes, resultado, operador):
+def crear_funcion_restriccion(coeficientes, exponentes, resultado, operador):
     """
-    Crea una función de restricción lineal basada en el operador.
+    Crea una función de restricción no lineal basada en los coeficientes, exponentes y operador.
 
     :param coeficientes: Lista de coeficientes para la restricción.
+    :param exponentes: Lista de exponentes para la restricción.
     :param resultado: Resultado esperado de la restricción.
-    :param operador: Operador de la restricción ('<=' o '>=').
+    :param operador: Operador de la restricción ('<=', '>=').
     :return: Función de restricción lista para ser utilizada en la optimización.
     """
     if operador == "<=":
         def restriccion_func(variables):
-            # Para '<=': b - sum(a_i * x_i) >= 0
-            return resultado - sum(coef * var for coef, var in zip(coeficientes, variables))
+            # Para '<=': resultado - sum(a_i * x_i ** e_i) >= 0
+            return resultado - sum(coef * (var ** exp) for coef, var, exp in zip(coeficientes, variables, exponentes))
     elif operador == ">=":
         def restriccion_func(variables):
-            # Para '>=': sum(a_i * x_i) - b >= 0
-            return sum(coef * var for coef, var in zip(coeficientes, variables)) - resultado
+            # Para '>=': sum(a_i * x_i ** e_i) - resultado >= 0
+            return sum(coef * (var ** exp) for coef, var, exp in zip(coeficientes, variables, exponentes)) - resultado
     else:
         raise ValueError(f"Operador de restricción inválido: {operador}")
 
@@ -49,11 +50,12 @@ def construir_restricciones(restricciones_datos):
     for dato in restricciones_datos:
         # Extraer datos de la restricción
         coeficientes = dato['coeficientes']
+        exponentes = dato['exponentes']
         resultado = dato['resultado']
         operador = dato['operador']
 
         # Crear la función de restricción considerando el operador
-        funcion_restriccion = crear_funcion_restriccion(coeficientes, resultado, operador)
+        funcion_restriccion = crear_funcion_restriccion(coeficientes, exponentes, resultado, operador)
 
         # Agregar la restricción al listado como una inecuación
         restricciones.append({'type': 'ineq', 'fun': funcion_restriccion})
