@@ -1,6 +1,6 @@
 import tkinter as tk
-from pl.formulario import crear_formulario as crear_formulario_pl
-from npl.formulario import crear_formulario as crear_formulario_npl
+from pl.formulario_pl import crear_formulario as crear_formulario_pl
+from npl.formulario_npl import crear_formulario as crear_formulario_npl
 
 def abrir_programacion_lineal():
     root = tk.Tk()

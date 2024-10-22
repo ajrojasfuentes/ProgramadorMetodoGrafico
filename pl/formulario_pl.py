@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
-from pl.optimizacion import optimizar
-from pl.graficar import graficar_solucion
+from pl.optimizacion_pl import optimizar
+from pl.graficar_pl import graficar_solucion
 
 entries_variables = []
 entries_restricciones = []
@@ -85,7 +85,8 @@ def agregar_variables():
                 tk.Label(root, text=f"x{j+1}").grid(row=4 + i, column=(j * 2) + 1, padx=2, pady=5)
                 restriccion_entries.append(entry)
 
-            operador = tk.StringVar(value="<=")
+            operador = tk.StringVar(root)
+            operador.set("<=")
             operadores_restricciones.append(operador)
             tk.OptionMenu(root, operador, "<=", ">=").grid(row=4 + i, column=num_variables * 2, padx=2, pady=5)
 
@@ -114,7 +115,8 @@ def crear_formulario(parent):
 
     tk.Label(root, text="Maximizar o minimizar (max/min):").grid(row=1, column=0)
     global variable_tipo
-    variable_tipo = tk.StringVar(value="max")
+    variable_tipo = tk.StringVar(root)
+    variable_tipo.set("max")  # Valor por defecto
     tk.OptionMenu(root, variable_tipo, "max", "min").grid(row=1, column=1)
 
     global entry_num_restricciones

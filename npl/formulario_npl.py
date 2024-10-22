@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
-from npl.optimizacion import optimizar
-from npl.graficar import graficar_solucion
+from npl.optimizacion_npl import optimizar
+from npl.graficar_npl import graficar_solucion
 
 # Variables globales para almacenar las entradas de usuario
 entries_variables = []  # Lista para entradas de coeficientes de variables
